@@ -1,0 +1,50 @@
+---
+title: "Lead–lag structure between prediction markets and equities"
+date: "2026-06-08"
+status: "in progress"
+summary: "Treating Kalshi and Polymarket as an information source: cross-correlation methodology, pitfalls, and first results framed as a quant research problem."
+tags: ["quant", "markets", "statistics"]
+---
+
+Hypothesis: on well-defined macro events, prediction market prices update
+before the corresponding equity or crypto reaction — often by minutes — and
+the lead is measurable.
+
+## Setup
+
+For a prediction market price series $p_t$ (a probability) and an asset return
+series $r_t$, estimate the lagged cross-correlation
+
+$$
+\rho(\tau) = \operatorname{corr}\big(\Delta p_{t}, \; r_{t+\tau}\big)
+$$
+
+and look for the $\tau^\* = \arg\max_\tau |\rho(\tau)|$. A positive $\tau^\*$
+means the prediction market leads.
+
+## Pitfalls found so far
+
+| Pitfall | Symptom | Fix |
+| --- | --- | --- |
+| Stale quotes on thin markets | spurious "lead" from interpolation | trade-time sampling, not clock-time |
+| Non-synchronous trading hours | correlations at absurd lags | restrict to overlapping sessions |
+| Event clustering | one FOMC day dominates the estimate | per-event normalization |
+
+## First honest result
+
+On a small sample of rate-decision events, the point estimate of the lead is
+positive but the confidence interval still straddles zero. Which is the
+correct outcome for this amount of data — the interesting work is building the
+event library large enough for the interval to tighten one way or the other.
+
+```python
+def lead_lag(dp, r, max_lag):
+    return {
+        tau: np.corrcoef(dp[:-tau or None], r[tau:])[0, 1]
+        for tau in range(1, max_lag)
+    }
+```
+
+Next: switch from Pearson correlation to a Hawkes-style excitation model, so
+bursts of prediction-market trades can be treated as events rather than
+increments.

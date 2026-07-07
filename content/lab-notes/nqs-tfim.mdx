@@ -1,0 +1,82 @@
+---
+title: "Neural quantum states for the transverse-field Ising model"
+date: "2026-06-20"
+status: "in progress"
+summary: "Implementing Carleo & Troyer from scratch: an RBM wavefunction, Metropolis sampling, and stochastic reconfiguration — with S₂ entropy as a training diagnostic."
+tags: ["quantum", "machine learning", "VMC"]
+---
+
+The goal: reproduce the core result of Carleo & Troyer (2017) with nothing but
+NumPy, and then push past it with an entanglement-based diagnostic.
+
+## The ansatz
+
+The wavefunction is a restricted Boltzmann machine with the hidden units traced
+out analytically:
+
+$$
+\psi_\theta(\sigma) = e^{\sum_i a_i \sigma_i} \prod_{j=1}^{M} 2\cosh\!\Big(b_j + \sum_i W_{ij}\,\sigma_i\Big)
+$$
+
+The parameters $\theta = (a, b, W)$ are complex. For $N$ spins and $M = \alpha N$
+hidden units, the ansatz has $O(\alpha N^2)$ parameters — polynomial, while the
+Hilbert space is $2^N$. That gap is the entire bet of the method.
+
+## Sampling
+
+Expectation values come from Metropolis–Hastings over spin configurations,
+with single spin flips as proposals. The acceptance ratio only needs
+amplitude ratios, never normalization:
+
+```python
+def log_psi(sigma, a, b, W):
+    theta = b + sigma @ W
+    return sigma @ a + np.sum(np.log(2 * np.cosh(theta)))
+
+def metropolis_step(sigma, a, b, W, rng):
+    i = rng.integers(len(sigma))
+    proposal = sigma.copy()
+    proposal[i] *= -1
+    log_ratio = 2 * np.real(log_psi(proposal, a, b, W) - log_psi(sigma, a, b, W))
+    if np.log(rng.random()) < log_ratio:
+        return proposal
+    return sigma
+```
+
+## Local energy
+
+For the TFIM Hamiltonian
+$H = -J\sum_i \sigma^z_i \sigma^z_{i+1} - h \sum_i \sigma^x_i$,
+the local energy at configuration $\sigma$ is
+
+$$
+E_\mathrm{loc}(\sigma) = -J\sum_i \sigma_i \sigma_{i+1} \; - \; h \sum_i \frac{\psi(\sigma^{(i)})}{\psi(\sigma)}
+$$
+
+where $\sigma^{(i)}$ is $\sigma$ with spin $i$ flipped. The off-diagonal term is
+where the wavefunction ratio trick earns its keep — one flipped spin only
+changes one row of the $\cosh$ products, so the ratio is $O(M)$, not $O(NM)$.
+
+## The diagnostic I actually care about
+
+Everyone plots energy convergence. The more interesting question: does the
+network *learn entanglement in the right order*? Track the second Rényi
+entropy of a half-chain cut during training,
+
+$$
+S_2 = -\ln \operatorname{Tr}\rho_A^2,
+$$
+
+estimated with the swap trick on two replica chains. Near the critical point
+$h/J = 1$, $S_2$ should grow logarithmically with subsystem size — and my
+working hypothesis is that the *trajectory* of $S_2$ during optimization says
+something about when the ansatz is under-parameterized, before the energy
+error tells you.
+
+## Open threads
+
+- Stochastic reconfiguration vs. plain Adam: SR is dramatically better near
+  criticality, and I want to understand *why* in geometric terms
+  (it is natural gradient on the Fubini–Study metric).
+- Can the $S_2$ trajectory be turned into an early-stopping / capacity
+  criterion? This connects to the RBM entanglement bound I am trying to prove.
