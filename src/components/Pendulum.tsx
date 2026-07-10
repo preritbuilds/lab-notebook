@@ -106,20 +106,39 @@ export default function Pendulum({ width = 220, height = 170 }: { width?: number
       raf = requestAnimationFrame(loop);
     }
 
+    // click to perturb: an impulse whose direction depends on which side
+    // of the pivot you strike, plus a little randomness — chaos does the rest
+    function perturb(e: PointerEvent) {
+      const rect = canvas!.getBoundingClientRect();
+      const side = e.clientX - rect.left < ox ? -1 : 1;
+      w1 += side * (2.2 + Math.random() * 2.5);
+      w2 -= side * (1.5 + Math.random() * 2.5);
+      trace.length = 0; // start a fresh pen line
+      if (reduced) {
+        // no continuous animation: advance a moment and show the new frame
+        for (let i = 0; i < 60; i++) step(1 / 180);
+        draw();
+      }
+    }
+    canvas.addEventListener("pointerdown", perturb);
+
     if (reduced) {
       draw();
     } else {
       raf = requestAnimationFrame(loop);
     }
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      canvas.removeEventListener("pointerdown", perturb);
+    };
   }, [width, height]);
 
   return (
     <canvas
       ref={canvasRef}
-      style={{ width, height }}
+      style={{ width, height, cursor: "pointer", touchAction: "none" }}
       role="img"
-      aria-label="A small double pendulum simulation tracing a chaotic path"
+      aria-label="A small double pendulum simulation — click to give it a kick"
     />
   );
 }

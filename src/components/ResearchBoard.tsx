@@ -11,7 +11,7 @@ import {
 } from "@/lib/board-data";
 import Pendulum from "./Pendulum";
 
-const STORAGE_KEY = "lab-board-positions-v1";
+const STORAGE_KEY = "lab-board-positions-v2";
 const NOTE_W = 216;
 const NOTE_H = 150; // approximate; used for clamping + string anchors
 
@@ -181,77 +181,15 @@ export default function ResearchBoard() {
           })}
         </svg>
 
-        {/* ---------- taped sketch: RBM diagram ---------- */}
-        <div
-          className="pointer-events-none absolute select-none bg-white/90 p-3 shadow-note"
-          style={{ left: 500, top: 300, transform: "rotate(1.4deg)", width: 200 }}
-        >
-          <span className="tape" style={{ left: 58, top: -12, transform: "rotate(-3deg)" }} />
-          <svg viewBox="0 0 180 120" width="176" height="118" aria-label="Sketch of a restricted Boltzmann machine">
-            {[0, 1, 2, 3].map((i) =>
-              [0, 1, 2].map((j) => (
-                <line
-                  key={`${i}-${j}`}
-                  x1={30 + i * 40}
-                  y1={95}
-                  x2={50 + j * 40}
-                  y2={30}
-                  stroke="#16324F"
-                  strokeWidth="0.8"
-                  opacity="0.55"
-                />
-              ))
-            )}
-            {[0, 1, 2, 3].map((i) => (
-              <circle key={`v${i}`} cx={30 + i * 40} cy={95} r={7} fill="#FBFAF4" stroke="#16324F" strokeWidth="1.4" />
-            ))}
-            {[0, 1, 2].map((j) => (
-              <circle key={`h${j}`} cx={50 + j * 40} cy={30} r={7} fill="#CDE8F6" stroke="#16324F" strokeWidth="1.4" />
-            ))}
-            <text x="8" y="99" fontSize="9" fontFamily="IBM Plex Mono, monospace" fill="#41403C">σ</text>
-            <text x="8" y="34" fontSize="9" fontFamily="IBM Plex Mono, monospace" fill="#41403C">h</text>
-          </svg>
-          <p className="margin-note mt-1 text-base">ψ(σ) = Σ_h e^{"{...}"} — a wavefunction with hidden units</p>
-        </div>
-
         {/* ---------- taped live experiment: double pendulum ---------- */}
         <div
           className="absolute bg-white/90 p-2 shadow-note"
-          style={{ left: 505, top: 620, transform: "rotate(-1.6deg)" }}
+          style={{ left: 620, top: 855, transform: "rotate(-1.6deg)" }}
         >
           <span className="tape" style={{ left: 70, top: -12, transform: "rotate(2deg)" }} />
           <Pendulum />
           <p className="px-1 pb-1 font-mono text-[10px] uppercase tracking-widest text-graphite/70">
-            exp. 07 — sensitive dependence
-          </p>
-        </div>
-
-        {/* ---------- paper-clipped index card ---------- */}
-        <div
-          className="pointer-events-none absolute select-none bg-white p-3 shadow-note"
-          style={{ left: 500, top: 90, width: 210, transform: "rotate(-0.8deg)" }}
-        >
-          {/* paper clip */}
-          <svg
-            className="absolute -top-4 left-6"
-            width="18"
-            height="40"
-            viewBox="0 0 18 40"
-            aria-hidden="true"
-          >
-            <path
-              d="M5 8 v22 a4 4 0 0 0 8 0 V6 a6 6 0 0 0 -12 0 v26"
-              fill="none"
-              stroke="#7d8a94"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-          <p className="font-mono text-[11px] uppercase tracking-widest text-graphite/70">
-            standing rule
-          </p>
-          <p className="mt-1 font-hand text-xl leading-snug text-ink">
-            Build the thing before deciding whether it&apos;s a career.
+            exp. 07 — sensitive dependence · click to perturb
           </p>
         </div>
 
@@ -287,18 +225,28 @@ export default function ResearchBoard() {
               <p className="font-mono text-[10px] uppercase tracking-widest text-graphite/60">
                 {n.section === "built" ? "built" : "thinking"}
               </p>
-              <h3 className="mt-1 font-mono text-sm font-semibold leading-snug text-ink">
-                {n.href ? (
-                  <Link href={n.href} className="underline decoration-dotted underline-offset-2 hover:text-string">
-                    {n.title}
-                  </Link>
-                ) : (
-                  n.title
-                )}
-              </h3>
-              <p className="mt-2 font-hand text-lg leading-snug text-graphite">
-                {n.body}
-              </p>
+              {n.body ? (
+                <>
+                  <h3 className="mt-1 font-mono text-sm font-semibold leading-snug text-ink">
+                    <NoteTitle note={n} />
+                  </h3>
+                  <p className="mt-2 font-hand text-lg leading-snug text-graphite">
+                    {n.body}
+                  </p>
+                </>
+              ) : (
+                <h3
+                  className={`flex min-h-[112px] items-center justify-center text-center font-mono font-semibold leading-snug text-ink ${
+                    n.title.length <= 12
+                      ? "text-3xl"
+                      : n.title.length <= 26
+                        ? "text-2xl"
+                        : "text-xl"
+                  }`}
+                >
+                  <NoteTitle note={n} />
+                </h3>
+              )}
             </div>
           );
         })}
@@ -316,5 +264,17 @@ export default function ResearchBoard() {
         </p>
       </div>
     </div>
+  );
+}
+
+function NoteTitle({ note }: { note: BoardNote }) {
+  if (!note.href) return <>{note.title}</>;
+  return (
+    <Link
+      href={note.href}
+      className="underline decoration-dotted underline-offset-2 hover:text-string"
+    >
+      {note.title}
+    </Link>
   );
 }
