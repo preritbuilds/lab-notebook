@@ -61,8 +61,8 @@ export default function NotebookCover() {
             Prerit
           </h1>
           <p className="mt-4 max-w-md text-center font-serif text-graphite">
-            Physics &amp; EECS, UC Berkeley. Quantum computing, neural quantum
-            states, markets — and the things I build to understand them.
+            Physics &amp; ECE @ Cal. Interested in quantum computing, prediction markets, 
+            information, and trying new things (read: doing dumb stuff).
           </p>
           <p className="margin-note mt-6">
             if found, please return — experiments in progress ↓

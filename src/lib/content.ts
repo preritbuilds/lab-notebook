@@ -8,9 +8,9 @@ export const SITE = {
   description:
     "The working notebook of a physicist-engineer at UC Berkeley: quantum computing experiments, neural quantum states, markets, and things built along the way.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com", // TODO: set your domain
-  email: "you@example.com", // TODO: set your email
-  github: "https://github.com/your-handle", // TODO
-  linkedin: "https://www.linkedin.com/in/your-handle", // TODO
+  email: "prerit@berkeley.com", // TODO: set your email
+  github: "https://github.com/preritbuilds", // TODO
+  linkedin: "https://www.linkedin.com/in/prerit-bucha-b17703303/", // TODO
 };
 
 export type PostMeta = {
